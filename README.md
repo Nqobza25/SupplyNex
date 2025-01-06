@@ -13,7 +13,7 @@ SupplyNex is a modern e-commerce platform for building materials, office station
 
 ## Live Demo
 
-Visit [SupplyNex](https://your-github-username.github.io/SupplyNex) to see the live application.
+Visit [SupplyNex](https://Nqobza25.github.io/SupplyNex) to see the live application.
 
 ## Technologies Used
 
@@ -27,7 +27,7 @@ Visit [SupplyNex](https://your-github-username.github.io/SupplyNex) to see the l
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-github-username/SupplyNex.git
+   git clone https://github.com/Nqobza25/SupplyNex.git
    ```
 
 2. Install dependencies:
@@ -66,6 +66,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Your Name - your.email@example.com
-
-Project Link: [https://github.com/your-github-username/SupplyNex](https://github.com/your-github-username/SupplyNex)
+Project Link: [https://github.com/Nqobza25/SupplyNex](https://github.com/Nqobza25/SupplyNex)
