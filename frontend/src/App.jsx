@@ -14,7 +14,7 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Router>
+        <Router basename="/SupplyNex">
           <div className="min-h-screen bg-gray-100">
             <Navbar />
             <main>

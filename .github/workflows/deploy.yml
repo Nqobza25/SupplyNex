@@ -19,19 +19,18 @@ jobs:
           node-version: '18'
 
       - name: Install Dependencies
-        run: |
-          cd frontend
-          npm install
+        working-directory: frontend
+        run: npm install
 
       - name: Build
-        run: |
-          cd frontend
-          npm run build
+        working-directory: frontend
+        run: npm run build
         env:
           VITE_BASE_URL: /SupplyNex
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/dist
           branch: gh-pages
+          folder: frontend/dist
+          clean: true
