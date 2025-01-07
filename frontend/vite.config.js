@@ -7,7 +7,8 @@ export default defineConfig({
   base: '/SupplyNex/',
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
+    emptyOutDir: true,
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: undefined,
@@ -16,7 +17,6 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    strictPort: true,
-    historyApiFallback: true,
+    open: true,
   },
 })
