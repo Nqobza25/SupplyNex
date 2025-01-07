@@ -33,7 +33,10 @@ jobs:
         env:
           VITE_BASE_URL: /SupplyNex/
 
-      - name: Copy index.html to 404.html
+      - name: Create .nojekyll file
+        run: touch frontend/dist/.nojekyll
+
+      - name: Copy 404.html
         working-directory: frontend
         run: cp dist/index.html dist/404.html
 
@@ -42,5 +45,4 @@ jobs:
         with:
           folder: frontend/dist
           branch: gh-pages
-          clean-exclude: |
-            .nojekyll
+          clean: true
