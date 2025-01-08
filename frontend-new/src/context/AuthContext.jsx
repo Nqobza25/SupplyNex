@@ -1,25 +1,31 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { 
+import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
 const AuthContext = createContext();
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
+  // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -29,11 +35,13 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const signup = async (email, password) => {
+  const signup = async (email, password, displayName) => {
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      return { success: true, user: result.user };
+      setError(null);
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      return { success: true, user };
     } catch (error) {
+      console.error('Signup error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
@@ -41,20 +49,24 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      return { success: true, user: result.user };
+      setError(null);
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      return { success: true, user };
     } catch (error) {
+      console.error('Login error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
   };
 
-  const loginWithGoogle = async () => {
+  const googleSignIn = async () => {
     try {
+      setError(null);
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      return { success: true, user: result.user };
+      const { user } = await signInWithPopup(auth, provider);
+      return { success: true, user };
     } catch (error) {
+      console.error('Google sign-in error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
@@ -62,9 +74,23 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
+      setError(null);
       await signOut(auth);
       return { success: true };
     } catch (error) {
+      console.error('Logout error:', error);
+      setError(error.message);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const resetPassword = async (email) => {
+    try {
+      setError(null);
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (error) {
+      console.error('Password reset error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
@@ -72,12 +98,14 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
-    error,
     loading,
+    error,
     signup,
     login,
-    loginWithGoogle,
+    googleSignIn,
     logout,
+    resetPassword,
+    isAuthenticated: !!user
   };
 
   return (

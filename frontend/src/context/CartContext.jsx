@@ -1,63 +1,90 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { addToCart, getCart, updateCartItem, removeFromCart } from '../firebase/firestore';
 
-const CartContext = createContext()
+const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState([])
-  const [total, setTotal] = useState(0)
-
-  const addToCart = (product, quantity = 1) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id)
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
-      }
-      return [...prevCart, { ...product, quantity }]
-    })
-  }
-
-  const removeFromCart = (productId) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== productId))
-  }
-
-  const updateQuantity = (productId, quantity) => {
-    if (quantity < 1) return
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.id === productId ? { ...item, quantity } : item
-      )
-    )
-  }
-
-  const clearCart = () => {
-    setCart([])
-  }
+  const [cart, setCart] = useState([]);
+  const [total, setTotal] = useState(0);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Calculate total whenever cart changes
-    const newTotal = cart.reduce(
-      (sum, item) => sum + parseFloat(item.price.replace('$', '')) * item.quantity,
-      0
-    )
-    setTotal(newTotal)
-  }, [cart])
+    if (user) {
+      loadCart();
+    } else {
+      setCart([]);
+      setTotal(0);
+    }
+  }, [user]);
+
+  const loadCart = async () => {
+    if (!user) return;
+    const result = await getCart(user.uid);
+    if (result.success) {
+      setCart(result.cartItems);
+      calculateTotal(result.cartItems);
+    }
+  };
+
+  const calculateTotal = (items) => {
+    const sum = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    setTotal(sum);
+  };
+
+  const addItem = async (product, quantity = 1) => {
+    if (!user) return false;
+    const result = await addToCart(user.uid, product.id, quantity);
+    if (result.success) {
+      const newCart = [...cart, { ...product, quantity }];
+      setCart(newCart);
+      calculateTotal(newCart);
+      return true;
+    }
+    return false;
+  };
+
+  const updateQuantity = async (itemId, quantity) => {
+    if (!user) return false;
+    const result = await updateCartItem(user.uid, itemId, quantity);
+    if (result.success) {
+      const newCart = cart.map(item => 
+        item.id === itemId ? { ...item, quantity } : item
+      );
+      setCart(newCart);
+      calculateTotal(newCart);
+      return true;
+    }
+    return false;
+  };
+
+  const removeItem = async (itemId) => {
+    if (!user) return false;
+    const result = await removeFromCart(user.uid, itemId);
+    if (result.success) {
+      const newCart = cart.filter(item => item.id !== itemId);
+      setCart(newCart);
+      calculateTotal(newCart);
+      return true;
+    }
+    return false;
+  };
 
   const value = {
     cart,
     total,
-    addToCart,
-    removeFromCart,
+    addItem,
     updateQuantity,
-    clearCart,
-  }
+    removeItem
+  };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+    </CartContext.Provider>
+  );
 }
 
 export function useCart() {
-  return useContext(CartContext)
+  return useContext(CartContext);
 }
